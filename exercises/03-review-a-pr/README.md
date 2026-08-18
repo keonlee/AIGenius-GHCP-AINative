@@ -2,7 +2,7 @@
 
 ## 목표 (Goal)
 
-Copilot이 만든 pull request를 시니어 개발자의 비판적인 시선으로 리뷰합니다.
+Copilot이 만든 PR(pull request)를 개발팀장의 시선으로 리뷰합니다.
 
 ## 가장 중요한 스킬 (Your Most Important Skill)
 
@@ -75,7 +75,7 @@ Copilot이 생성한 모든 PR에 이 체크리스트를 사용하세요:
 
 ---
 
-## 회고 질문 (Reflection Questions)
+## 확인사항
 
 - Copilot이 수용 기준에서 놓친 부분이 있었나요?
 - 세션 로그의 결정 중 동의하기 어려운 것이 있었나요?
