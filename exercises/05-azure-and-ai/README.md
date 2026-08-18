@@ -1,25 +1,25 @@
-# Exercise 05 -- Azure + AI: The Cloud-Native Extension
+# Exercise 05 -- Azure + AI: 클라우드 네이티브 확장
 
-## Goal
+## 목표 (Goal)
 
-See how Copilot handles real cloud SDK integration and AI feature development — and understand what makes these tasks both impressive and risky to delegate.
+Copilot이 실제 클라우드 SDK 연동과 AI 기능 개발을 어떻게 처리하는지 살펴보고, 왜 이런 작업이 인상적이면서도 위임 시 위험할 수 있는지 이해합니다.
 
-## Why This Is Different
+## 왜 다른가 (Why This Is Different)
 
-In the previous exercises, Copilot extended a local Python app. Now you'll write issues that require Copilot to:
+이전 실습에서는 Copilot이 로컬 Python 앱을 확장했습니다. 이번에는 Copilot이 다음을 수행해야 하는 이슈를 작성합니다:
 
-- Use the **Azure SDK** for cloud storage (`azure-data-tables`)
-- Call **Azure OpenAI** to add AI behaviour at runtime
-- Handle secrets safely using environment variables
-- Write tests that mock cloud calls
+- 클라우드 저장을 위해 **Azure SDK** (`azure-data-tables`) 사용
+- 런타임 AI 동작을 위해 **Azure OpenAI** 호출
+- 환경 변수로 비밀 값(secret)을 안전하게 처리
+- 클라우드 호출을 mock한 테스트 작성
 
-This is a meaningful complexity jump. It's also where the quality of your issue and your review skills matter most.
+이는 복잡도가 크게 상승하는 지점입니다. 이슈의 품질과 리뷰 스킬이 가장 중요해지는 지점이기도 합니다.
 
 ---
 
-## Option 1: Migrate Storage to Azure Table Storage
+## Option 1: 저장소를 Azure Table Storage로 마이그레이션
 
-### The Architecture
+### 아키텍처 (The Architecture)
 
 ```
 CLI (app.py)
@@ -28,11 +28,11 @@ CLI (app.py)
             └─► AzureTableStorage (new — activated by env var)
 ```
 
-When `AZURE_STORAGE_CONNECTION_STRING` is set, the app uses Azure Table Storage. Otherwise it falls back to the local JSON file. **Zero breaking changes.**
+`AZURE_STORAGE_CONNECTION_STRING` 이 설정되면 앱은 Azure Table Storage를 사용하고, 그렇지 않으면 기존 로컬 JSON 파일로 폴백(fallback)합니다. **호환성이 깨지는 변경은 없습니다.**
 
-### Pre-Written Issue
+### 미리 작성된 이슈 (Pre-Written Issue)
 
-Use this as your Exercise 01 issue (Option A) or create a new issue with this content:
+이 내용을 Exercise 01 이슈(Option A)로 사용하거나, 새 이슈를 만들어 아래 내용을 넣으세요:
 
 ---
 
@@ -69,20 +69,20 @@ Tasks are currently stored in a local JSON file (`tasks.json`). This means data 
 
 ---
 
-### What to Look for in the PR
+### PR에서 확인할 사항 (What to Look for in the PR)
 
-When reviewing Copilot's implementation, pay particular attention to:
+Copilot의 구현을 리뷰할 때 특히 다음에 주목하세요:
 
-- **Does it hardcode any credentials?** This is a critical security failure if so.
-- **Does the storage abstraction actually decouple the two implementations?** Or did it inline everything in `app.py`?
-- **Are Azure errors handled gracefully?** Or do they produce raw Python stack traces?
-- **Are the tests actually isolated?** Azure calls must be mocked — not real.
+- **자격 증명을 하드코딩하지 않았는가?** 그렇다면 심각한 보안 문제입니다.
+- **저장소 추상화가 실제로 두 구현을 분리하는가?** 아니면 모든 것을 `app.py` 에 인라인했는가?
+- **Azure 에러가 우아하게(graceful) 처리되는가?** 아니면 원시 Python 스택 트레이스를 그대로 뱉는가?
+- **테스트가 실제로 격리되어 있는가?** Azure 호출은 반드시 mock되어야 하며, 실제 호출이 아니어야 합니다.
 
 ---
 
-## Option 2: Add Azure OpenAI Task Categorisation
+## Option 2: Azure OpenAI 태스크 카테고리 분류 추가
 
-### The Architecture
+### 아키텍처 (The Architecture)
 
 ```
 python app.py add "Renew SSL certificate"
@@ -91,7 +91,7 @@ python app.py add "Renew SSL certificate"
                     └─► task saved with tags: ["devops"]
 ```
 
-### Pre-Written Issue
+### 미리 작성된 이슈 (Pre-Written Issue)
 
 ---
 
@@ -128,32 +128,32 @@ Users often forget to tag tasks when adding them. We want to use Azure OpenAI to
 
 ---
 
-### What to Look for in the PR
+### PR에서 확인할 사항 (What to Look for in the PR)
 
-- **Is the AI call truly optional?** The app must work even when the env vars are not set.
-- **Is the timeout enforced?** A slow OpenAI call should not block the CLI.
-- **Is the prompt well-designed?** Ask Copilot to show you the system prompt — does it constrain the output format clearly?
-- **Are errors swallowed silently?** Errors should be caught and logged, not silently ignored.
-
----
-
-## Stretch Goal: Run the Full Loop Twice
-
-1. Complete Option 1 (Azure storage) with Copilot via the AI-native loop
-2. After merging, write a new issue for Option 2 (Azure OpenAI) and run the loop again
-
-By the end, you'll have an app that:
-- Stores tasks in Azure Table Storage
-- Auto-categorises tasks with AI on creation
-- Has a full test suite with mocked cloud calls
-- Loads all credentials from environment variables
-
-That is a production-grade AI-native cloud application — built through collaboration between you and Copilot.
+- **AI 호출이 정말로 선택적인가?** 환경 변수가 설정되지 않아도 앱이 동작해야 합니다.
+- **타임아웃이 강제되는가?** 느린 OpenAI 호출이 CLI를 블록해서는 안 됩니다.
+- **프롬프트가 잘 설계되었는가?** Copilot에게 시스템 프롬프트를 보여달라고 요청하세요. 출력 형식을 명확히 제약하고 있나요?
+- **에러가 조용히 삼켜지지는 않는가?** 에러는 잡히고 로깅되어야 하며, 조용히 무시되어서는 안 됩니다.
 
 ---
 
-## Next Steps
+## 스트레치 골 (Stretch Goal): 전체 루프를 두 번 실행하기
 
-- Read the [Azure Table Storage Python quickstart](https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-quickstart-create-python)
-- Read the [Azure OpenAI Python quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?pivots=programming-language-python)
-- Explore [GitHub Copilot documentation](https://docs.github.com/en/copilot)
+1. AI-Native 루프를 통해 Copilot과 함께 Option 1(Azure storage)을 완료
+2. 머지 후, Option 2(Azure OpenAI)에 대한 새 이슈를 작성하여 루프를 다시 실행
+
+끝나면 다음을 갖춘 앱이 완성됩니다:
+- Azure Table Storage에 태스크 저장
+- 생성 시 AI로 태스크 자동 카테고리 분류
+- mock된 클라우드 호출을 갖춘 전체 테스트 스위트
+- 모든 자격 증명은 환경 변수에서 로드
+
+이것이 여러분과 Copilot의 협업으로 만들어진, 프로덕션 수준의 AI-Native 클라우드 애플리케이션입니다.
+
+---
+
+## 다음 단계 (Next Steps)
+
+- [Azure Table Storage Python quickstart](https://learn.microsoft.com/en-us/azure/storage/tables/table-storage-quickstart-create-python) 읽기
+- [Azure OpenAI Python quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?pivots=programming-language-python) 읽기
+- [GitHub Copilot documentation](https://docs.github.com/en/copilot) 살펴보기
