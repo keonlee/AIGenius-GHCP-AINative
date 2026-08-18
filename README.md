@@ -1,7 +1,5 @@
 # AI Genius Episode 1: Workshop Repo
 
-![TitlePage](https://github.com/codess-aus/AIGenius-GHCP-AINative/blob/4d72afc7038a1cf0f45bc48c38ae517547b30628/assets/AI-Genius-Ep1.png)
-
 
 ## "Code with AI: GitHub Copilot for AI-Native Coding Workflows"
 
@@ -105,13 +103,6 @@ You are the **tech lead** in this workflow. Copilot handles the *how*. You defin
 4. **Iterate, don't regenerate** -- guide via comments rather than starting from scratch.
 5. **Stay in the loop** -- check the session log, understand what Copilot did and why.
 
----
-
-## Speaker
-
-**Michelle Sandford** -- Developer Engagement Lead, Australia and NZ
-
-Michelle is a Developer Engagement Leader at Microsoft who writes code, builds with GitHub and Azure AI, and learns out loud.
 
 ---
 
