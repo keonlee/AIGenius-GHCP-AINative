@@ -1,9 +1,11 @@
-# AI Genius Episode 1: 워크숍 저장소
+# AI Genius Episode 1: Workshop
 
 
 ## "Code with AI: GitHub Copilot for AI-Native Coding Workflows"
 
-환영합니다! 이 저장소는 **AI Genius Episode 1** 실습 워크숍 저장소입니다. 이슈 작성, Copilot에게 작업 위임, 생성된 코드 리뷰, 그리고 PR 코멘트를 통한 반복(iterate)까지 AI-Native 개발 루프 전 과정을 실습하게 됩니다.
+환영합니다! 
+이 Repo는 **AI Genius Episode 1** 실습 워크숍 Repo입니다. 
+이슈 작성, Copilot에게 작업 위임, 생성된 코드 리뷰, 그리고 PR 코멘트를 통한 반복(iterate)까지 AI-Native 개발 루프 전 과정을 실습하게 됩니다.
 
 ---
 
