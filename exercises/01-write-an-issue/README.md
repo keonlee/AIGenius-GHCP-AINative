@@ -49,14 +49,14 @@ Copilot을 위해 잘 작성된 이슈에는 다음 요소가 포함됩니다:
 
 ---
 
-## 회고 질문 (Reflection Questions)
+## 확인사항
 
 - "완료"를 명확히 기술하기 위해 얼마나 구체적으로 작성해야 했나요?
-- 사람 팀원이라면 이미 알고 있을 만한 정보 중 Copilot에게는 어떤 정보가 필요했나요?
-- 수용 기준(acceptance criteria)을 작성하면서 기능에 대한 자신의 생각이 더 명확해졌나요?
+- 만약 진짜 사람 팀원이라면 이미 알고 있을 만한 정보 중에서 Copilot에게는 어떤 정보가 추가로 필요했나요?
+- 수용조건(acceptance criteria)을 작성하면서 기능에 대한 본인의 생각이 더 명확해졌나요?
 
 ---
 
 ## 다음 단계 (Next Step)
 
-이슈 작성을 마쳤다면 [Exercise 02 -- Assign to Copilot](../02-assign-to-copilot/README.md) 으로 이동하세요.
+이슈 작성을 성공했다면 [Exercise 02 -- Assign to Copilot](../02-assign-to-copilot/README.md) 으로 이동하세요.
