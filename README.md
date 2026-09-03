@@ -1,10 +1,9 @@
-# AI Genius Episode 1: Workshop
+# AI Genius 에피소드 1: 워크숍
 
-
-## "Code with AI: GitHub Copilot for AI-Native Coding Workflows"
+## "AI와 함께 코딩하기: AI-Native 워크플로우를 위한 GitHub Copilot"
 
 환영합니다! <br>
-이 Repo는 **AI Genius Episode 1** 실습을 위한 워크숍 Repo입니다.<br> 
+이 저장소는 **AI Genius Episode 1** 실습을 위한 워크숍 저장소입니다.<br>
 이슈 작성, Copilot에게 작업 위임, 생성된 코드 리뷰, 그리고 PR 코멘트를 통한 반복(iterate)까지 AI-Native 개발 루프 전 과정을 실습하게 됩니다.
 
 ---
@@ -24,21 +23,21 @@
 
 ```
 IDEA
-  └─► GitHub Issue  (describe the work)
-        └─► Assign to Copilot  (Copilot agent picks it up)
-              └─► Code is generated in a secure sandbox
-                    └─► Draft PR is opened  (with session log)
-                          └─► Human reviews and iterates via PR comments
-                                └─► Merge and ship
+  └─► GitHub Issue  (작업 내용을 설명)
+       └─► Assign to Copilot  (Copilot 에이전트가 작업을 가져감)
+             └─► Code is generated in a secure sandbox
+                   └─► Draft PR is opened  (세션 로그와 함께)
+                         └─► Human reviews and iterates via PR comments
+                               └─► Merge and ship
 ```
 
 이 워크플로우에서 당신의 역할은 **개발팀장** 입니다. Copilot은 *어떻게(how)* 를 처리하고, 당신은 *무엇을(what)* 그리고 *왜(why)* 를 정의합니다.
 
 ---
 
-## 설정 안내 (Setup Instructions)
+## 설정 안내
 
-### 사전 준비 사항 (Prerequisites)
+### 사전 준비 사항
 
 - GitHub Copilot에 접근 가능한 GitHub 계정
 - [GitHub Copilot App](https://github.com/features/copilot) 설치 (데스크톱)
@@ -70,34 +69,35 @@ IDEA
 5. [`exercises/01-write-an-issue`](./exercises/01-write-an-issue/README.md) 부터 시작하여 순서대로 실습을 진행하세요.
 
 ---
-## 저장소 구조 (Repo Structure)
+
+## 저장소 구조
 
 ```
 📁 AIGenius-GHCP-AINative/
-  ├── README.md                        # Episode intro + setup instructions
+  ├── README.md                        # 에피소드 소개 + 설정 안내
   ├── .github/
-  │   ├── copilot-instructions.md      # Copilot context: conventions, Azure patterns, secrets
+  │   ├── copilot-instructions.md      # Copilot 컨텍스트: 규칙, Azure 패턴, 비밀 값
   │   └── ISSUE_TEMPLATE/
-  │       └── feature-request.md       # Issue template for AI-native workflow
+  │       └── feature-request.md       # AI-Native 워크플로우용 이슈 템플릿
   ├── exercises/
-  │   ├── 01-write-an-issue/           # Task: write a well-formed issue (cloud/AI options)
-  │   ├── 02-assign-to-copilot/        # Task: assign + observe
-  │   ├── 02a-fleet-mode/              # Optional: parallel sub-tasks with /fleet
-  │   ├── 02b-squad-framework/         # Optional: persistent agent team with /squad
-  │   ├── 03-review-a-pr/              # Task: review and comment on a PR
-  │   ├── 04-iterate/                  # Task: iterate via PR comments
-  │   └── 05-azure-and-ai/             # Stretch: pre-written issues for Azure + OpenAI features
-  └── starter-app/                     # Python CLI task manager to extend
+  │   ├── 01-write-an-issue/           # 과제: 잘 작성된 이슈 작성 (클라우드/AI 옵션)
+  │   ├── 02-assign-to-copilot/        # 과제: 할당 후 관찰
+  │   ├── 02a-fleet-mode/              # 선택 과제: /fleet 로 병렬 하위 작업 수행
+  │   ├── 02b-squad-framework/         # 선택 과제: /squad 로 지속적인 에이전트 팀 구성
+  │   ├── 03-review-a-pr/              # 과제: PR 리뷰 및 코멘트 남기기
+  │   ├── 04-iterate/                  # 과제: PR 코멘트로 반복하기
+  │   └── 05-azure-and-ai/             # 확장 과제: Azure + OpenAI 기능을 위한 사전 작성 이슈
+  └── starter-app/                     # 확장할 Python CLI 작업 관리자
       ├── app.py                       # CLI: add, list, complete, edit, delete, stats
       ├── requirements.txt             # click, rich, pytest
       └── tests/
-          ├── conftest.py              # Shared fixtures (isolated task file)
-          └── test_tasks.py            # 41 tests covering all commands + edge cases
+         ├── conftest.py              # 공통 fixture (격리된 작업 파일)
+         └── test_tasks.py            # 41개의 명령과 엣지 케이스를 검증하는 테스트
 ```
 
 ---
 
-## AI-Native 코딩의 5가지 황금률 
+## AI-Native 코딩의 5가지 황금률
 
 1. **더 나은 이슈 내용을 작성 (Write better issues)** -- 이슈가 곧 프롬프트입니다. 구체적으로 작성하세요.
 2. **상급 개발자처럼 리뷰 (Review like a senior dev)** -- AI는 빠르게 생성하고, 사람은 똑똑하게 검증합니다.
@@ -105,10 +105,9 @@ IDEA
 4. **처음부터 다시 만들지 말고 반복 (Iterate, don't regenerate)** -- 새로 시작하는 대신 코멘트로 방향을 안내하세요.
 5. **루프 안에 머물러라 (Stay in the loop)** -- 세션 로그를 확인하고 Copilot이 무엇을 왜 했는지 이해하세요.
 
-
 ---
 
-## 워크숍 문서 사이트 (Workshop Docs Site - MkDocs)
+## 워크숍 문서 사이트 - MkDocs
 
 이 저장소에는 참가자용 MkDocs Material 문서 사이트가 포함되어 있습니다.
 
