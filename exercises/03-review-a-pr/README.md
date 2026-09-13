@@ -16,7 +16,7 @@ AI-Native 워크플로우에서 **비판적 리뷰(critical review)** 는 가장
 
 ### Step 1 -- 드래프트 PR 열기
 
-1. 저장소의 **Pull Requests** 탭으로 이동합니다.
+1. Repo의 **Pull Requests** 탭으로 이동합니다.
 2. Copilot이 이슈로부터 생성한 드래프트 PR을 엽니다.
 
 ### Step 2 -- 세션 로그 읽기
