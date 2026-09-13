@@ -7,7 +7,20 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from app import add, cli, complete, delete, edit, is_overdue, list_tasks, load_tasks, save_tasks, stats
+from app import (
+    add,
+    cli,
+    complete,
+    delete,
+    edit,
+    highlight_matches,
+    is_overdue,
+    list_tasks,
+    load_tasks,
+    save_tasks,
+    search,
+    stats,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -176,6 +189,37 @@ class TestListCommand:
         result = runner.invoke(cli, ["list", "--tag", "nonexistent"])
         assert result.exit_code == 0
         assert "No tasks match" in result.output
+
+
+class TestSearchCommand:
+    def test_search_matches_name_and_description(self, runner: CliRunner, sample_tasks: list[dict]) -> None:
+        result = runner.invoke(cli, ["search", "release"])
+        assert result.exit_code == 0
+        assert "Deploy to production" in result.output
+        assert "Buy groceries" not in result.output
+
+    def test_search_sorts_by_priority(self, runner: CliRunner, sample_tasks: list[dict]) -> None:
+        result = runner.invoke(cli, ["search", "e"])
+        assert result.exit_code == 0
+        assert result.output.index("Deploy to production") < result.output.index("Write unit tests")
+        assert result.output.index("Write unit tests") < result.output.index("Buy groceries")
+
+    def test_search_highlights_matches(self) -> None:
+        text = highlight_matches("Deploy release pipeline", "RELEASE")
+        assert text.plain == "Deploy release pipeline"
+        assert text.spans[0].style == "reverse"
+        assert text.spans[0].start == 7
+        assert text.spans[0].end == 14
+
+    def test_search_empty_keyword_fails(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["search", "   "])
+        assert result.exit_code != 0
+        assert "cannot be empty" in result.output
+
+    def test_search_no_match_message(self, runner: CliRunner, sample_tasks: list[dict]) -> None:
+        result = runner.invoke(cli, ["search", "nonexistent"])
+        assert result.exit_code == 0
+        assert "No tasks found" in result.output
 
 
 class TestCompleteCommand:

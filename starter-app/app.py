@@ -10,6 +10,7 @@ Usage:
     python app.py list
     python app.py list --status pending --priority high
     python app.py list --overdue
+    python app.py search "keyword"
     python app.py complete 1
     python app.py edit 1 --priority low --due 2026-01-15
     python app.py delete 1
@@ -30,6 +31,7 @@ TASKS_FILE = Path(__file__).resolve().with_name("tasks.json")
 
 PRIORITIES = ("low", "medium", "high")
 PRIORITY_COLOURS = {"low": "cyan", "medium": "yellow", "high": "red"}
+PRIORITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 
 console = Console()
 
@@ -145,6 +147,29 @@ def find_task(tasks: list[dict], task_id: int) -> dict | None:
         The matching task dict, or None if not found.
     """
     return next((t for t in tasks if t["id"] == task_id), None)
+
+
+def highlight_matches(value: str, keyword: str) -> Text:
+    """Highlight every case-insensitive keyword match in a text value.
+
+    Args:
+        value: The text in which to find matches.
+        keyword: The search keyword.
+
+    Returns:
+        A Rich Text object with matching ranges styled in reverse video.
+    """
+    text = Text(value)
+    if not keyword:
+        return text
+
+    folded_value = value.casefold()
+    folded_keyword = keyword.casefold()
+    start = 0
+    while (match_start := folded_value.find(folded_keyword, start)) != -1:
+        text.stylize("reverse", match_start, match_start + len(keyword))
+        start = match_start + len(keyword)
+    return text
 
 
 # ---------------------------------------------------------------------------
@@ -298,6 +323,52 @@ def list_tasks(status: str, priority: str | None, tag: str | None, overdue: bool
             tags_text,
             status_text,
         )
+
+    console.print(table)
+
+
+@cli.command()
+@click.argument("keyword")
+def search(keyword: str) -> None:
+    """Find tasks whose name or description contains KEYWORD."""
+    keyword = keyword.strip()
+    if not keyword:
+        console.print("[red]Error: Search keyword cannot be empty.[/red]")
+        sys.exit(1)
+
+    tasks = load_tasks()
+    matches = [
+        task
+        for task in tasks
+        if keyword.casefold() in str(task.get("name", "")).casefold()
+        or keyword.casefold() in str(task.get("description", "")).casefold()
+    ]
+    matches.sort(key=lambda task: PRIORITY_ORDER.get(task.get("priority", "medium"), 1))
+
+    if not matches:
+        console.print(f"[yellow]No tasks found matching '{keyword}'.[/yellow]")
+        return
+
+    table = Table(show_header=True, header_style="bold blue", box=None, pad_edge=False)
+    table.add_column("ID", style="dim", width=4, justify="right")
+    table.add_column("Task", min_width=30)
+    table.add_column("Description", min_width=30)
+    table.add_column("Priority", width=8)
+    table.add_column("Status", width=9)
+
+    for task in matches:
+        task_name = highlight_matches(str(task.get("name", "")), keyword)
+        if task.get("done"):
+            task_name.stylize("strike dim")
+
+        description = highlight_matches(str(task.get("description", "")), keyword)
+        prio = task.get("priority", "medium")
+        priority_text = Text(prio, style=PRIORITY_COLOURS.get(prio, "white"))
+        status_text = (
+            Text("✓ Done", style="green") if task.get("done") else Text("Pending", style="yellow")
+        )
+
+        table.add_row(str(task["id"]), task_name, description, priority_text, status_text)
 
     console.print(table)
 
