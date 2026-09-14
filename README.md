@@ -3,7 +3,7 @@
 ## "AI와 함께 코딩하기: AI-Native 워크플로우를 위한 GitHub Copilot"
 
 환영합니다! <br>
-이 저장소는 **AI Genius Episode 1** 실습을 위한 워크숍 저장소입니다.<br>
+이 Repo는 **AI Genius Episode 1** 실습을 위한 워크숍 자료입니다.<br>
 이슈 작성, Copilot에게 작업 위임, 생성된 코드 리뷰, 그리고 PR 코멘트를 통한 반복(iterate)까지 AI-Native 개발 루프 전 과정을 실습하게 됩니다.
 
 ---
@@ -46,9 +46,9 @@ IDEA
 
 ### 시작하기
 
-1. 이 저장소를 본인 GitHub 계정으로 **Fork** 하세요 (페이지 오른쪽 상단).
+1. 이 Repo를 본인 GitHub 계정으로 **Fork** 하세요 (페이지 오른쪽 상단).
 
-2. 포크한 저장소를 로컬에 **Clone** 하세요:
+2. 포크한 Repo를 로컬에 **Clone** 하세요:
    ```bash
    git clone https://github.com/YOUR-USERNAME/AIGenius-GHCP-AINative.git
    cd AIGenius-GHCP-AINative
@@ -64,13 +64,13 @@ IDEA
    python app.py stats
    ```
 
-4. **GitHub Copilot App** 을 열고 포크한 저장소에 연결하세요.
+4. **GitHub Copilot App** 을 열고 포크한 Repo에 연결하세요.
 
 5. [`exercises/01-write-an-issue`](./exercises/01-write-an-issue/README.md) 부터 시작하여 순서대로 실습을 진행하세요.
 
 ---
 
-## 저장소 구조
+## Repo 구조
 
 ```
 📁 AIGenius-GHCP-AINative/
@@ -109,7 +109,7 @@ IDEA
 
 ## 워크숍 문서 사이트 - MkDocs
 
-이 저장소에는 참가자용 MkDocs Material 문서 사이트가 포함되어 있습니다.
+이 Repo에는 참가자용 MkDocs Material 문서 사이트가 포함되어 있습니다.
 
 - 로컬에서 실행:
   ```bash
