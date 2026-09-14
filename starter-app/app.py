@@ -165,10 +165,16 @@ def highlight_matches(value: str, keyword: str) -> Text:
 
     folded_value = value.casefold()
     folded_keyword = keyword.casefold()
+    folded_to_original: list[int] = []
+    for original_index, character in enumerate(value):
+        folded_to_original.extend([original_index] * len(character.casefold()))
     start = 0
     while (match_start := folded_value.find(folded_keyword, start)) != -1:
-        text.stylize("reverse", match_start, match_start + len(keyword))
-        start = match_start + len(keyword)
+        match_end = match_start + len(folded_keyword)
+        original_start = folded_to_original[match_start]
+        original_end = folded_to_original[match_end - 1] + 1
+        text.stylize("reverse", original_start, original_end)
+        start = match_end
     return text
 
 
