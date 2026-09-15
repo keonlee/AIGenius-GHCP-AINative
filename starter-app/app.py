@@ -10,6 +10,7 @@ Usage:
     python app.py list
     python app.py list --status pending --priority high
     python app.py list --overdue
+    python app.py search "production"
     python app.py complete 1
     python app.py edit 1 --priority low --due 2026-01-15
     python app.py delete 1
@@ -25,6 +26,8 @@ import click
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
+
+from ai import suggest_tag
 
 TASKS_FILE = Path(__file__).resolve().with_name("tasks.json")
 
@@ -147,6 +150,68 @@ def find_task(tasks: list[dict], task_id: int) -> dict | None:
     return next((t for t in tasks if t["id"] == task_id), None)
 
 
+def task_matches_query(task: dict, query: str) -> bool:
+    """Return whether a task contains a search query.
+
+    The task name, description, and tags are searched case-insensitively.
+
+    Args:
+        task: A task dictionary.
+        query: The normalized search text to look for.
+
+    Returns:
+        True when the query occurs in a searchable task field.
+    """
+    searchable_values = [
+        str(task.get("name", "")),
+        str(task.get("description", "")),
+        *(str(tag) for tag in task.get("tags", [])),
+    ]
+    return any(query in value.casefold() for value in searchable_values)
+
+
+def display_tasks(tasks: list[dict]) -> None:
+    """Display tasks in a Rich table.
+
+    Args:
+        tasks: The tasks to display.
+    """
+    table = Table(show_header=True, header_style="bold blue", box=None, pad_edge=False)
+    table.add_column("ID", style="dim", width=4, justify="right")
+    table.add_column("Task", min_width=30)
+    table.add_column("Priority", width=8)
+    table.add_column("Due", width=12)
+    table.add_column("Tags", min_width=10)
+    table.add_column("Status", width=9)
+
+    for task in tasks:
+        task_name = Text(str(task["name"]))
+        if task.get("done"):
+            task_name.stylize("strike dim")
+
+        priority = task.get("priority", "medium")
+        priority_colour = PRIORITY_COLOURS.get(priority, "white")
+        priority_text = Text(priority, style=priority_colour)
+
+        tags_text = Text(", ".join(task.get("tags", [])) or "—", style="dim")
+        status_text = (
+            Text("✓ Done", style="green") if task.get("done") else Text("Pending", style="yellow")
+        )
+        if is_overdue(task):
+            status_text = Text("Overdue", style="bold red")
+
+        table.add_row(
+            str(task["id"]),
+            task_name,
+            priority_text,
+            format_due(task),
+            tags_text,
+            status_text,
+        )
+
+    console.print(table)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -181,7 +246,20 @@ def cli() -> None:
     metavar="TAG",
     help="Tag to attach (may be repeated).",
 )
-def add(name: str, priority: str, description: str, due: str | None, tag: tuple[str, ...]) -> None:
+@click.option(
+    "--no-ai",
+    is_flag=True,
+    default=False,
+    help="Skip AI tag suggestion.",
+)
+def add(
+    name: str,
+    priority: str,
+    description: str,
+    due: str | None,
+    tag: tuple[str, ...],
+    no_ai: bool,
+) -> None:
     """Add a new task.
 
     NAME is the title of the task to add.
@@ -201,13 +279,27 @@ def add(name: str, priority: str, description: str, due: str | None, tag: tuple[
             console.print(f"[red]Error: '{due}' is not a valid date. Use YYYY-MM-DD format.[/red]")
             sys.exit(1)
 
+    tags = list(tag)
+    suggested_tag = None
+    if not tags and not no_ai:
+        try:
+            suggested_tag = suggest_tag(name, description.strip())
+        except Exception as error:
+            console.print(
+                "[yellow]Warning: AI tag suggestion failed "
+                f"({type(error).__name__}). Saving the task without an AI tag.[/yellow]"
+            )
+        else:
+            if suggested_tag:
+                tags.append(suggested_tag)
+
     tasks = load_tasks()
     task: dict = {
         "id": next_id(tasks),
         "name": name,
         "description": description.strip(),
         "priority": priority,
-        "tags": list(tag),
+        "tags": tags,
         "due_date": due,
         "done": False,
         "created_at": datetime.now().isoformat(timespec="seconds"),
@@ -220,6 +312,8 @@ def add(name: str, priority: str, description: str, due: str | None, tag: tuple[
         f"[green]Added task #[bold]{task['id']}[/bold][/green]: {name} "
         f"[[{priority_colour}]{priority}[/{priority_colour}]]"
     )
+    if suggested_tag:
+        console.print(Text(f"[AI suggested tag: {suggested_tag}]", style="cyan"))
 
 
 @cli.command(name="list")
@@ -266,40 +360,27 @@ def list_tasks(status: str, priority: str | None, tag: str | None, overdue: bool
         console.print("[yellow]No tasks match your filters.[/yellow]")
         return
 
-    table = Table(show_header=True, header_style="bold blue", box=None, pad_edge=False)
-    table.add_column("ID", style="dim", width=4, justify="right")
-    table.add_column("Task", min_width=30)
-    table.add_column("Priority", width=8)
-    table.add_column("Due", width=12)
-    table.add_column("Tags", min_width=10)
-    table.add_column("Status", width=9)
+    display_tasks(tasks)
 
-    for task in tasks:
-        task_name = Text(str(task["name"]))
-        if task.get("done"):
-            task_name.stylize("strike dim")
 
-        prio = task.get("priority", "medium")
-        prio_colour = PRIORITY_COLOURS.get(prio, "white")
-        priority_text = Text(prio, style=prio_colour)
+@cli.command()
+@click.argument("query")
+def search(query: str) -> None:
+    """Search tasks by name, description, or tag.
 
-        tags_text = Text(", ".join(task.get("tags", [])) or "—", style="dim")
-        status_text = (
-            Text("✓ Done", style="green") if task.get("done") else Text("Pending", style="yellow")
-        )
-        if is_overdue(task):
-            status_text = Text("Overdue", style="bold red")
+    QUERY is matched case-insensitively against searchable task fields.
+    """
+    normalized_query = query.strip().casefold()
+    if not normalized_query:
+        console.print("[red]Error: Search query cannot be empty.[/red]")
+        sys.exit(1)
 
-        table.add_row(
-            str(task["id"]),
-            task_name,
-            priority_text,
-            format_due(task),
-            tags_text,
-            status_text,
-        )
+    matches = [task for task in load_tasks() if task_matches_query(task, normalized_query)]
+    if not matches:
+        console.print(f"[yellow]No tasks match '{query.strip()}'.[/yellow]")
+        return
 
-    console.print(table)
+    display_tasks(matches)
 
 
 @cli.command()

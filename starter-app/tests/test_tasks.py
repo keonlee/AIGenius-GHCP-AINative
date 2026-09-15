@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from app import add, cli, complete, delete, edit, is_overdue, list_tasks, load_tasks, save_tasks, stats
+from app import add, cli, complete, delete, edit, is_overdue, list_tasks, load_tasks, save_tasks, search, stats
 
 
 # ---------------------------------------------------------------------------
@@ -176,6 +176,34 @@ class TestListCommand:
         result = runner.invoke(cli, ["list", "--tag", "nonexistent"])
         assert result.exit_code == 0
         assert "No tasks match" in result.output
+
+
+class TestSearchCommand:
+    def test_searches_name_case_insensitively(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        result = runner.invoke(cli, ["search", "DEPLOY"])
+        assert result.exit_code == 0
+        assert "Deploy to production" in result.output
+        assert "Buy groceries" not in result.output
+
+    def test_searches_description_and_tags(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        description_result = runner.invoke(cli, ["search", "release pipeline"])
+        tag_result = runner.invoke(cli, ["search", "personal"])
+        assert "Deploy to production" in description_result.output
+        assert "Buy groceries" in tag_result.output
+
+    def test_search_no_match_message(self, runner: CliRunner, sample_tasks: list[dict]) -> None:
+        result = runner.invoke(cli, ["search", "nonexistent"])
+        assert result.exit_code == 0
+        assert "No tasks match 'nonexistent'" in result.output
+
+    def test_search_empty_query_fails(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["search", "   "])
+        assert result.exit_code != 0
+        assert "Search query cannot be empty" in result.output
 
 
 class TestCompleteCommand:
