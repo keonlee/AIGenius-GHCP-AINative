@@ -337,7 +337,7 @@ def search_tasks(keyword: str) -> None:
     ]
 
     if not matching_tasks:
-        console.print(f"[yellow]No tasks match '{keyword}'.[/yellow]")
+        console.print(Text(f"No tasks match '{keyword}'.", style="yellow"))
         return
 
     priority_order = {"high": 0, "medium": 1, "low": 2}
