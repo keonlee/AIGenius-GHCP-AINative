@@ -7,7 +7,19 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from app import add, cli, complete, delete, edit, is_overdue, list_tasks, load_tasks, save_tasks, stats
+from app import (
+    add,
+    cli,
+    complete,
+    delete,
+    edit,
+    highlight_matches,
+    is_overdue,
+    list_tasks,
+    load_tasks,
+    save_tasks,
+    stats,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -176,6 +188,61 @@ class TestListCommand:
         result = runner.invoke(cli, ["list", "--tag", "nonexistent"])
         assert result.exit_code == 0
         assert "No tasks match" in result.output
+
+
+class TestSearchCommand:
+    def test_search_matches_name_and_description(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        name_result = runner.invoke(cli, ["search", "DEPLOY"])
+        description_result = runner.invoke(cli, ["search", "release"])
+
+        assert name_result.exit_code == 0
+        assert "Deploy to production" in name_result.output
+        assert "Buy groceries" not in name_result.output
+        assert description_result.exit_code == 0
+        assert "Run the release pipeline" in description_result.output
+        assert "Buy groceries" not in description_result.output
+
+    def test_search_sorts_by_descending_priority(
+        self, runner: CliRunner, isolated_tasks_file: Path
+    ) -> None:
+        tasks = [
+            {"id": 1, "name": "Low keyword", "description": "", "priority": "low", "done": False},
+            {"id": 2, "name": "High keyword", "description": "", "priority": "high", "done": False},
+            {"id": 3, "name": "Medium keyword", "description": "", "priority": "medium", "done": False},
+        ]
+        save_tasks(tasks)
+
+        result = runner.invoke(cli, ["search", "keyword"])
+
+        assert result.exit_code == 0
+        assert result.output.index("High keyword") < result.output.index("Medium keyword")
+        assert result.output.index("Medium keyword") < result.output.index("Low keyword")
+
+    def test_search_highlights_matches(self) -> None:
+        highlighted = highlight_matches("Deploy release", "release")
+
+        assert highlighted.plain == "Deploy release"
+        assert any(span.style == "bold yellow" for span in highlighted.spans)
+
+    def test_search_no_matches(self, runner: CliRunner, sample_tasks: list[dict]) -> None:
+        result = runner.invoke(cli, ["search", "unknown"])
+
+        assert result.exit_code == 0
+        assert "No tasks match 'unknown'" in result.output
+
+    def test_search_rejects_empty_keyword(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["search", "   "])
+
+        assert result.exit_code != 0
+        assert "keyword cannot be empty" in result.output
+
+    def test_search_requires_keyword(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["search"])
+
+        assert result.exit_code != 0
+        assert "Missing argument" in result.output
 
 
 class TestCompleteCommand:
