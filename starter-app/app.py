@@ -1,10 +1,10 @@
 """
-Task Manager CLI -- AI Genius Episode 1 Workshop Starter App
+작업 관리자 CLI -- AI Genius 에피소드 1 워크숍 스타터 앱
 
-A command-line task manager that demonstrates a real Python project
-for attendees to extend using AI-native workflows with GitHub Copilot.
+GitHub Copilot을 활용한 AI 네이티브 워크플로우 확장을 보여주는
+실제 Python 프로젝트 기반의 명령줄 작업 관리자입니다.
 
-Usage:
+사용법:
     python app.py add "Buy groceries"
     python app.py add "Deploy to production" --priority high --due 2025-12-31 --tag work
     python app.py list
@@ -35,16 +35,15 @@ console = Console()
 
 
 # ---------------------------------------------------------------------------
-# Storage helpers
+# 저장소 도우미
 # ---------------------------------------------------------------------------
 
 
 def load_tasks() -> list[dict]:
-    """Load tasks from the JSON storage file.
+    """JSON 저장 파일에서 작업을 불러옵니다.
 
-    Returns:
-        A list of task dictionaries. Returns an empty list if the file
-        does not exist or cannot be parsed.
+    반환값:
+        작업 딕셔너리 목록입니다. 파일이 없거나 파싱할 수 없으면 빈 목록을 반환합니다.
     """
     if not TASKS_FILE.exists():
         return []
@@ -60,24 +59,23 @@ def load_tasks() -> list[dict]:
 
 
 def save_tasks(tasks: list[dict]) -> None:
-    """Persist tasks to the JSON storage file.
+    """작업을 JSON 저장 파일에 저장합니다.
 
-    Args:
-        tasks: The list of task dictionaries to save.
+    인수:
+        tasks: 저장할 작업 딕셔너리 목록입니다.
     """
     with TASKS_FILE.open("w", encoding="utf-8") as f:
         json.dump(tasks, f, indent=2)
 
 
 def next_id(tasks: list[dict]) -> int:
-    """Calculate the next available task ID.
+    """사용 가능한 다음 작업 ID를 계산합니다.
 
-    Args:
-        tasks: The current list of tasks.
+    인수:
+        tasks: 현재 작업 목록입니다.
 
-    Returns:
-        An integer ID one greater than the current maximum, or 1 if there
-        are no tasks.
+    반환값:
+        현재 최댓값보다 1 큰 정수 ID를 반환합니다. 작업이 없으면 1을 반환합니다.
     """
     if not tasks:
         return 1
@@ -85,18 +83,18 @@ def next_id(tasks: list[dict]) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Domain helpers
+# 도메인 도우미
 # ---------------------------------------------------------------------------
 
 
 def is_overdue(task: dict) -> bool:
-    """Return True if a pending task has a due date in the past.
+    """대기 중인 작업의 마감일이 지났으면 True를 반환합니다.
 
-    Args:
-        task: A task dictionary.
+    인수:
+        task: 작업 딕셔너리입니다.
 
-    Returns:
-        True when the task is not yet done and its due_date is before today.
+    반환값:
+        작업이 완료되지 않았고 due_date가 오늘보다 이전이면 True를 반환합니다.
     """
     if task.get("done"):
         return False
@@ -110,13 +108,14 @@ def is_overdue(task: dict) -> bool:
 
 
 def format_due(task: dict) -> Text:
-    """Render the due date with colour based on urgency.
+    """긴급도에 따라 색상을 적용하여 마감일을 표시합니다.
 
-    Args:
-        task: A task dictionary.
+    인수:
+        task: 작업 딕셔너리입니다.
 
-    Returns:
-        A Rich Text object: red if overdue, yellow if due today, plain otherwise.
+    반환값:
+        Rich Text 객체입니다. 기한이 지났으면 빨간색, 오늘이면 노란색,
+        그 외에는 기본 색상으로 표시합니다.
     """
     due = task.get("due_date", "")
     if not due:
@@ -135,14 +134,14 @@ def format_due(task: dict) -> Text:
 
 
 def find_task(tasks: list[dict], task_id: int) -> dict | None:
-    """Find a task by its integer ID.
+    """정수 ID로 작업을 찾습니다.
 
-    Args:
-        tasks: The list of tasks to search.
-        task_id: The ID to look for.
+    인수:
+        tasks: 검색할 작업 목록입니다.
+        task_id: 찾을 ID입니다.
 
-    Returns:
-        The matching task dict, or None if not found.
+    반환값:
+        일치하는 작업 딕셔너리이며, 찾지 못하면 None입니다.
     """
     return next((t for t in tasks if t["id"] == task_id), None)
 
@@ -154,7 +153,7 @@ def find_task(tasks: list[dict], task_id: int) -> dict | None:
 
 @click.group()
 def cli() -> None:
-    """Task Manager — manage your to-do list from the terminal."""
+    """터미널에서 할 일 목록을 관리하는 작업 관리자입니다."""
 
 
 @cli.command()
@@ -165,26 +164,26 @@ def cli() -> None:
     type=click.Choice(PRIORITIES),
     default="medium",
     show_default=True,
-    help="Task priority.",
+    help="작업 우선순위.",
 )
-@click.option("--description", "-d", default="", help="Optional longer description.")
+@click.option("--description", "-d", default="", help="선택 사항인 자세한 설명.")
 @click.option(
     "--due",
     default=None,
     metavar="YYYY-MM-DD",
-    help="Optional due date (ISO 8601).",
+    help="선택 사항인 마감일 (ISO 8601).",
 )
 @click.option(
     "--tag",
     "-t",
     multiple=True,
     metavar="TAG",
-    help="Tag to attach (may be repeated).",
+    help="추가할 태그 (여러 번 지정할 수 있음).",
 )
 def add(name: str, priority: str, description: str, due: str | None, tag: tuple[str, ...]) -> None:
-    """Add a new task.
+    """새 작업을 추가합니다.
 
-    NAME is the title of the task to add.
+    NAME은 추가할 작업의 제목입니다.
     """
     name = name.strip()
     if not name:
@@ -228,26 +227,26 @@ def add(name: str, priority: str, description: str, due: str | None, tag: tuple[
     type=click.Choice(["pending", "done", "all"]),
     default="all",
     show_default=True,
-    help="Filter by completion status.",
+    help="완료 상태로 필터링합니다.",
 )
 @click.option(
     "--priority",
     "-p",
     type=click.Choice(PRIORITIES),
     default=None,
-    help="Filter by priority.",
+    help="우선순위로 필터링합니다.",
 )
-@click.option("--tag", "-t", default=None, metavar="TAG", help="Filter by tag.")
-@click.option("--overdue", is_flag=True, default=False, help="Show only overdue tasks.")
+@click.option("--tag", "-t", default=None, metavar="TAG", help="태그로 필터링합니다.")
+@click.option("--overdue", is_flag=True, default=False, help="기한이 지난 작업만 표시합니다.")
 def list_tasks(status: str, priority: str | None, tag: str | None, overdue: bool) -> None:
-    """List tasks with optional filters."""
+    """선택 사항인 필터를 적용하여 작업을 나열합니다."""
     tasks = load_tasks()
 
     if not tasks:
         console.print("[yellow]No tasks yet. Use 'add' to create one.[/yellow]")
         return
 
-    # Apply filters
+    # 필터 적용
     if status == "pending":
         tasks = [t for t in tasks if not t.get("done")]
     elif status == "done":
@@ -305,9 +304,9 @@ def list_tasks(status: str, priority: str | None, tag: str | None, overdue: bool
 @cli.command()
 @click.argument("task_id", type=int)
 def complete(task_id: int) -> None:
-    """Mark a task as complete.
+    """작업을 완료로 표시합니다.
 
-    TASK_ID is the numeric ID of the task to complete.
+    TASK_ID는 완료 처리할 작업의 숫자 ID입니다.
     """
     tasks = load_tasks()
     task = find_task(tasks, task_id)
@@ -327,27 +326,27 @@ def complete(task_id: int) -> None:
 
 @cli.command()
 @click.argument("task_id", type=int)
-@click.option("--name", "-n", default=None, help="New task name.")
+@click.option("--name", "-n", default=None, help="새 작업 이름.")
 @click.option(
     "--priority",
     "-p",
     type=click.Choice(PRIORITIES),
     default=None,
-    help="New priority.",
+    help="새 우선순위.",
 )
-@click.option("--description", "-d", default=None, help="New description.")
+@click.option("--description", "-d", default=None, help="새 설명.")
 @click.option(
     "--due",
     default=None,
     metavar="YYYY-MM-DD",
-    help="New due date (use '' to clear).",
+    help="새 마감일 (삭제하려면 ''을 사용).",
 )
 @click.option(
     "--tag",
     "-t",
     multiple=True,
     metavar="TAG",
-    help="Replace all tags (may be repeated; omit to leave unchanged).",
+    help="모든 태그를 교체합니다 (여러 번 지정할 수 있으며, 생략하면 변경하지 않음).",
 )
 def edit(
     task_id: int,
@@ -357,9 +356,9 @@ def edit(
     due: str | None,
     tag: tuple[str, ...],
 ) -> None:
-    """Edit an existing task.
+    """기존 작업을 수정합니다.
 
-    TASK_ID is the numeric ID of the task to edit.
+    TASK_ID는 수정할 작업의 숫자 ID입니다.
     """
     tasks = load_tasks()
     task = find_task(tasks, task_id)
@@ -418,9 +417,9 @@ def edit(
 @cli.command()
 @click.argument("task_id", type=int)
 def delete(task_id: int) -> None:
-    """Delete a task.
+    """작업을 삭제합니다.
 
-    TASK_ID is the numeric ID of the task to delete.
+    TASK_ID는 삭제할 작업의 숫자 ID입니다.
     """
     tasks = load_tasks()
     updated = [t for t in tasks if t["id"] != task_id]
@@ -435,7 +434,7 @@ def delete(task_id: int) -> None:
 
 @cli.command()
 def stats() -> None:
-    """Show a summary of your tasks."""
+    """작업 요약을 표시합니다."""
     tasks = load_tasks()
 
     total = len(tasks)
