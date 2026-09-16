@@ -10,6 +10,7 @@ GitHub Copilot을 활용한 AI 네이티브 워크플로우 확장을 보여주�
     python app.py list
     python app.py list --status pending --priority high
     python app.py list --overdue
+    python app.py search "keyword"
     python app.py complete 1
     python app.py edit 1 --priority low --due 2026-01-15
     python app.py delete 1
@@ -17,6 +18,7 @@ GitHub Copilot을 활용한 AI 네이티브 워크플로우 확장을 보여주�
 """
 
 import json
+import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -144,6 +146,22 @@ def find_task(tasks: list[dict], task_id: int) -> dict | None:
         일치하는 작업 딕셔너리이며, 찾지 못하면 None입니다.
     """
     return next((t for t in tasks if t["id"] == task_id), None)
+
+
+def highlight_matches(value: str, keyword: str) -> Text:
+    """검색어와 일치하는 텍스트를 강조 표시합니다.
+
+    인수:
+        value: 검색어를 포함할 수 있는 텍스트입니다.
+        keyword: 강조 표시할 검색어입니다.
+
+    반환값:
+        일치하는 부분이 굵은 노란색으로 표시된 Rich Text 객체입니다.
+    """
+    text = Text(value)
+    for match in re.finditer(re.escape(keyword), value, re.IGNORECASE):
+        text.stylize("bold yellow", match.start(), match.end())
+    return text
 
 
 # ---------------------------------------------------------------------------
@@ -296,6 +314,52 @@ def list_tasks(status: str, priority: str | None, tag: str | None, overdue: bool
             format_due(task),
             tags_text,
             status_text,
+        )
+
+    console.print(table)
+
+
+@cli.command(name="search")
+@click.argument("keyword", required=True)
+def search_tasks(keyword: str) -> None:
+    """이름 또는 설명에서 KEYWORD를 검색합니다."""
+    keyword = keyword.strip()
+    if not keyword:
+        console.print("[red]Error: Search keyword cannot be empty.[/red]")
+        sys.exit(1)
+
+    tasks = load_tasks()
+    matching_tasks = [
+        task
+        for task in tasks
+        if keyword.casefold() in str(task.get("name", "")).casefold()
+        or keyword.casefold() in str(task.get("description", "")).casefold()
+    ]
+
+    if not matching_tasks:
+        console.print(Text(f"No tasks match '{keyword}'.", style="yellow"))
+        return
+
+    priority_order = {"high": 0, "medium": 1, "low": 2}
+    matching_tasks.sort(key=lambda task: priority_order.get(task.get("priority"), len(priority_order)))
+
+    table = Table(show_header=True, header_style="bold blue", box=None, pad_edge=False)
+    table.add_column("ID", style="dim", width=4, justify="right")
+    table.add_column("Task", min_width=30)
+    table.add_column("Description", min_width=30)
+    table.add_column("Priority", width=8)
+    table.add_column("Status", width=9)
+
+    for task in matching_tasks:
+        priority = task.get("priority", "medium")
+        priority_colour = PRIORITY_COLOURS.get(priority, "white")
+        status = Text("✓ Done", style="green") if task.get("done") else Text("Pending", style="yellow")
+        table.add_row(
+            str(task["id"]),
+            highlight_matches(str(task.get("name", "")), keyword),
+            highlight_matches(str(task.get("description", "")), keyword),
+            Text(priority, style=priority_colour),
+            status,
         )
 
     console.print(table)
