@@ -61,6 +61,7 @@ IDEA
    python app.py add "Deploy the API" --priority high --due 2025-12-31 --tag work
    python app.py add "Buy coffee" --priority low --tag personal
    python app.py list
+   python app.py search "deploy"
    python app.py stats
    ```
 
@@ -88,11 +89,11 @@ IDEA
   │   ├── 04-iterate/                  # 과제: PR 코멘트로 반복하기
   │   └── 05-azure-and-ai/             # 확장 과제: Azure + OpenAI 기능을 위한 사전 작성 이슈
   └── starter-app/                     # 확장할 Python CLI 작업 관리자
-      ├── app.py                       # CLI: add, list, complete, edit, delete, stats
+      ├── app.py                       # CLI: add, list, search, complete, edit, delete, stats
       ├── requirements.txt             # click, rich, pytest
       └── tests/
          ├── conftest.py              # 공통 fixture (격리된 작업 파일)
-         └── test_tasks.py            # 41개의 명령과 엣지 케이스를 검증하는 테스트
+         └── test_tasks.py            # 51개의 명령과 엣지 케이스를 검증하는 테스트
 ```
 
 ---

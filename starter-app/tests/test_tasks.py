@@ -7,7 +7,20 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from app import add, cli, complete, delete, edit, is_overdue, list_tasks, load_tasks, save_tasks, stats
+from app import (
+    add,
+    cli,
+    complete,
+    delete,
+    edit,
+    is_overdue,
+    list_tasks,
+    load_tasks,
+    save_tasks,
+    search,
+    stats,
+    task_matches_keyword,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -69,6 +82,24 @@ class TestIsOverdue:
     def test_invalid_due_date_is_not_overdue(self) -> None:
         task = {"done": False, "due_date": "not-a-date"}
         assert is_overdue(task) is False
+
+
+class TestTaskMatchesKeyword:
+    def test_matches_name_case_insensitively(self) -> None:
+        task = {"name": "Deploy API", "description": "", "tags": []}
+        assert task_matches_keyword(task, "deploy") is True
+
+    def test_matches_description(self) -> None:
+        task = {"name": "Release", "description": "Run the pipeline", "tags": []}
+        assert task_matches_keyword(task, "pipeline") is True
+
+    def test_matches_tag(self) -> None:
+        task = {"name": "Release", "description": "", "tags": ["DevOps"]}
+        assert task_matches_keyword(task, "devops") is True
+
+    def test_returns_false_when_keyword_is_absent(self) -> None:
+        task = {"name": "Release", "description": "Production", "tags": ["work"]}
+        assert task_matches_keyword(task, "groceries") is False
 
 
 # ---------------------------------------------------------------------------
@@ -176,6 +207,47 @@ class TestListCommand:
         result = runner.invoke(cli, ["list", "--tag", "nonexistent"])
         assert result.exit_code == 0
         assert "No tasks match" in result.output
+
+
+class TestSearchCommand:
+    def test_search_shows_only_matching_tasks(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        result = runner.invoke(cli, ["search", "deploy"])
+        assert result.exit_code == 0
+        assert "Deploy to production" in result.output
+        assert "Buy groceries" not in result.output
+
+    def test_search_is_case_insensitive(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        result = runner.invoke(cli, ["search", "BUY"])
+        assert result.exit_code == 0
+        assert "Buy groceries" in result.output
+
+    def test_search_matches_description(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        result = runner.invoke(cli, ["search", "release pipeline"])
+        assert result.exit_code == 0
+        assert "Deploy to production" in result.output
+
+    def test_search_matches_tag(self, runner: CliRunner, sample_tasks: list[dict]) -> None:
+        result = runner.invoke(cli, ["search", "personal"])
+        assert result.exit_code == 0
+        assert "Buy groceries" in result.output
+
+    def test_search_no_matches(
+        self, runner: CliRunner, sample_tasks: list[dict]
+    ) -> None:
+        result = runner.invoke(cli, ["search", "nonexistent"])
+        assert result.exit_code == 0
+        assert "No tasks found matching 'nonexistent'" in result.output
+
+    def test_search_empty_keyword_fails(self, runner: CliRunner) -> None:
+        result = runner.invoke(cli, ["search", "   "])
+        assert result.exit_code != 0
+        assert "Search keyword cannot be empty" in result.output
 
 
 class TestCompleteCommand:

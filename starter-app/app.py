@@ -10,6 +10,7 @@ GitHub Copilot을 활용한 AI 네이티브 워크플로우 확장을 보여주�
     python app.py list
     python app.py list --status pending --priority high
     python app.py list --overdue
+    python app.py search "deploy"
     python app.py complete 1
     python app.py edit 1 --priority low --due 2026-01-15
     python app.py delete 1
@@ -146,6 +147,74 @@ def find_task(tasks: list[dict], task_id: int) -> dict | None:
     return next((t for t in tasks if t["id"] == task_id), None)
 
 
+def task_matches_keyword(task: dict, keyword: str) -> bool:
+    """작업의 이름, 설명 또는 태그가 키워드와 일치하는지 확인합니다.
+
+    인수:
+        task: 검색할 작업 딕셔너리입니다.
+        keyword: 대소문자를 구분하지 않고 부분 일치로 찾을 키워드입니다.
+
+    반환값:
+        검색 가능한 필드 중 하나라도 키워드를 포함하면 True를 반환합니다.
+    """
+    normalized_keyword = keyword.casefold()
+    searchable_values = [
+        str(task.get("name", "")),
+        str(task.get("description", "")),
+        *(str(tag) for tag in task.get("tags", [])),
+    ]
+    return any(normalized_keyword in value.casefold() for value in searchable_values)
+
+
+def display_tasks(tasks: list[dict]) -> None:
+    """작업 목록을 Rich 테이블로 출력합니다.
+
+    인수:
+        tasks: 출력할 작업 딕셔너리 목록입니다.
+    """
+    table = Table(
+        show_header=True,
+        header_style="bold blue",
+        box=None,
+        pad_edge=False,
+    )
+    table.add_column("ID", style="dim", width=4, justify="right")
+    table.add_column("Task", min_width=30)
+    table.add_column("Priority", width=8)
+    table.add_column("Due", width=12)
+    table.add_column("Tags", min_width=10)
+    table.add_column("Status", width=9)
+
+    for task in tasks:
+        task_name = Text(str(task["name"]))
+        if task.get("done"):
+            task_name.stylize("strike dim")
+
+        priority = task.get("priority", "medium")
+        priority_colour = PRIORITY_COLOURS.get(priority, "white")
+        priority_text = Text(priority, style=priority_colour)
+
+        tags_text = Text(", ".join(task.get("tags", [])) or "—", style="dim")
+        status_text = (
+            Text("✓ Done", style="green")
+            if task.get("done")
+            else Text("Pending", style="yellow")
+        )
+        if is_overdue(task):
+            status_text = Text("Overdue", style="bold red")
+
+        table.add_row(
+            str(task["id"]),
+            task_name,
+            priority_text,
+            format_due(task),
+            tags_text,
+            status_text,
+        )
+
+    console.print(table)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -265,40 +334,29 @@ def list_tasks(status: str, priority: str | None, tag: str | None, overdue: bool
         console.print("[yellow]No tasks match your filters.[/yellow]")
         return
 
-    table = Table(show_header=True, header_style="bold blue", box=None, pad_edge=False)
-    table.add_column("ID", style="dim", width=4, justify="right")
-    table.add_column("Task", min_width=30)
-    table.add_column("Priority", width=8)
-    table.add_column("Due", width=12)
-    table.add_column("Tags", min_width=10)
-    table.add_column("Status", width=9)
+    display_tasks(tasks)
 
-    for task in tasks:
-        task_name = Text(str(task["name"]))
-        if task.get("done"):
-            task_name.stylize("strike dim")
 
-        prio = task.get("priority", "medium")
-        prio_colour = PRIORITY_COLOURS.get(prio, "white")
-        priority_text = Text(prio, style=prio_colour)
+@cli.command()
+@click.argument("keyword")
+def search(keyword: str) -> None:
+    """키워드로 작업을 검색합니다.
 
-        tags_text = Text(", ".join(task.get("tags", [])) or "—", style="dim")
-        status_text = (
-            Text("✓ Done", style="green") if task.get("done") else Text("Pending", style="yellow")
-        )
-        if is_overdue(task):
-            status_text = Text("Overdue", style="bold red")
+    KEYWORD는 작업 이름, 설명 및 태그에서 대소문자 구분 없이 검색됩니다.
+    """
+    keyword = keyword.strip()
+    if not keyword:
+        console.print("[red]Error: Search keyword cannot be empty.[/red]")
+        sys.exit(1)
 
-        table.add_row(
-            str(task["id"]),
-            task_name,
-            priority_text,
-            format_due(task),
-            tags_text,
-            status_text,
-        )
+    matching_tasks = [
+        task for task in load_tasks() if task_matches_keyword(task, keyword)
+    ]
+    if not matching_tasks:
+        console.print(f"[yellow]No tasks found matching '{keyword}'.[/yellow]")
+        return
 
-    console.print(table)
+    display_tasks(matching_tasks)
 
 
 @cli.command()
